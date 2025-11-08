@@ -137,9 +137,9 @@ export const Contact2 = ({
               />
             </div>
             <div className="grid w-full gap-1.5">
-              <Label htmlFor="message">Décrivez votre besoin en automatisation.</Label>
+              <Label htmlFor="message">Décrivez votre besoin.</Label>
               <Textarea 
-                placeholder="Décrivez votre besoin en automatisation." 
+                placeholder="Décrivez votre besoin." 
                 id="message" 
                 name="message"
                 required
