@@ -10,6 +10,7 @@ import {
 import { motion } from 'framer-motion';
 import { Highlighter } from '@/components/ui/highlighter';
 import { AnimatedSection, AnimatedParagraph, AnimatedImage } from '@/components/AnimatedSection';
+import { Contact2 } from '@/components/Contact2';
 
 const Services: React.FC = () => {
   const [openItems, setOpenItems] = useState<number[]>([]);
@@ -225,6 +226,8 @@ const Services: React.FC = () => {
         </motion.div>
         </AnimatedSection>
       </div>
+      {/* Contact2 - Juste au-dessus du Footer */}
+      <Contact2 />
     </div>);
 
 };

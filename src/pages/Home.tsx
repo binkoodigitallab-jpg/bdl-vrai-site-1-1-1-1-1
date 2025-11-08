@@ -8,6 +8,7 @@ import Robot from '@/components/ui/Robot';
 import TiltedCard from '@/components/ui/TiltedCard';
 import { motion } from 'framer-motion';
 import { AnimatedSection, AnimatedParagraph, AnimatedImage } from '@/components/AnimatedSection';
+import { Contact2 } from '@/components/Contact2';
 
 export default function Home() {
   const whatsappUrl = 'https://api.whatsapp.com/send?phone=22644323841';
@@ -603,5 +604,8 @@ export default function Home() {
         </div>
       </motion.section>
       </AnimatedSection>
+
+      {/* Contact2 - Juste au-dessus du Footer */}
+      <Contact2 />
     </div>;
 }

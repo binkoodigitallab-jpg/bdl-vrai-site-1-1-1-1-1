@@ -6,6 +6,7 @@ import { ScrollTimeline } from '@/components/lightswind/scroll-timeline';
 import OrbitCard from '@/components/ui/OrbitCard';
 import { motion } from 'framer-motion';
 import { AnimatedSection, AnimatedParagraph } from '@/components/AnimatedSection';
+import { Contact2 } from '@/components/Contact2';
 
 const Contact: React.FC = () => {
   const socialMediaMethods = [
@@ -136,57 +137,8 @@ const Contact: React.FC = () => {
         </div>
         </AnimatedSection>
 
-        {/* Featured WhatsApp Contact with OrbitCard */}
-        <AnimatedSection animation="fade-up" delay={0.2}>
-        <motion.div
-          className="mb-16 md:mb-20"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}>
-
-          <OrbitCard orbitColor="#ef4444">
-            <InteractiveCard delay={100}>
-              <div className="p-8 md:p-10 lg:p-12 text-center bg-background rounded-2xl">
-                <MessageCircle className="h-14 w-14 md:h-16 md:w-16 text-primary mx-auto mb-5 md:mb-6" />
-                <h2 className="text-3xl md:text-4xl font-bold mb-5 md:mb-6">
-                  Commençons Par WhatsApp
-                </h2>
-                <AnimatedParagraph delay={0.2}>
-                <p className="text-base md:text-lg text-muted-foreground mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Pour une réponse rapide et un échange direct, WhatsApp reste notre canal 
-                  privilégié. Décrivez-nous votre projet et recevez une première estimation 
-                  en quelques heures.
-                </p>
-                </AnimatedParagraph>
-                
-                <div className="bg-secondary/30 p-5 md:p-6 rounded-xl max-w-md mx-auto mb-8 md:mb-10">
-                  <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
-                    Message type suggéré :
-                  </p>
-                  <p className="text-xs md:text-sm italic leading-relaxed">
-                    "Bonjour BinkoO ! Je souhaite discuter d'un projet [type de projet]. 
-                    Pouvez-vous me contacter pour un premier échange ?"
-                  </p>
-                </div>
-
-                <a
-                  href="#"
-                  onClick={handleWhatsAppClick}
-                  className="inline-block">
-
-                  <ThreeDButton className="px-10 py-4">
-                    <span className="flex items-center gap-2">
-                      Ouvrir WhatsApp maintenant
-                      <MessageCircle className="h-5 w-5" />
-                    </span>
-                  </ThreeDButton>
-                </a>
-              </div>
-            </InteractiveCard>
-          </OrbitCard>
-        </motion.div>
-        </AnimatedSection>
+        {/* Contact2 - Remplacement de la section WhatsApp */}
+        <Contact2 />
 
         {/* Quick Actions - Desktop/Tablet: Regular grid */}
         <div className="hidden md:grid md:grid-cols-2 gap-5 md:gap-6 mb-16 md:mb-20">
