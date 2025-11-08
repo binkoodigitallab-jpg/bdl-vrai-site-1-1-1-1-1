@@ -21,50 +21,39 @@ export const Contact2 = ({
   web = { label: "BinkoO Digital Lab", url: "https://binkoodigitallab.com" },
 }: Contact2Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    firstname: "",
-    lastname: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
     try {
-      const response = await fetch("/api/contact", {
+      // Using Formspree endpoint - Replace with your actual Formspree form ID
+      // To get your form ID: Sign up at https://formspree.io and create a new form
+      const response = await fetch("https://formspree.io/f/xanygnde", {
         method: "POST",
+        body: formData,
         headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+          'Accept': 'application/json'
+        }
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        toast.success("Message envoyé avec succès ! Nous vous répondrons sous peu.");
-        setFormData({
-          firstname: "",
-          lastname: "",
-          email: "",
-          subject: "",
-          message: "",
-        });
+        toast.success("Demande envoyée avec succès ! Nous vous recontacterons sous 24h.");
+        form.reset();
       } else {
-        toast.error(data.error || "Une erreur est survenue. Veuillez réessayer.");
+        const data = await response.json();
+        if (data.errors) {
+          toast.error(data.errors.map((error: any) => error.message).join(", "));
+        } else {
+          toast.error("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+        }
       }
     } catch (error) {
-      toast.error("Impossible d'envoyer le message. Vérifiez votre connexion.");
+      console.error("Erreur d'envoi:", error);
+      toast.error("Erreur serveur. Veuillez réessayer plus tard ou nous contacter directement par email.");
     } finally {
       setIsSubmitting(false);
     }
@@ -112,9 +101,8 @@ export const Contact2 = ({
                 <Input 
                   type="text" 
                   id="firstname" 
+                  name="firstname"
                   placeholder="Prénom" 
-                  value={formData.firstname}
-                  onChange={handleChange}
                   required
                 />
               </div>
@@ -123,9 +111,8 @@ export const Contact2 = ({
                 <Input 
                   type="text" 
                   id="lastname" 
+                  name="lastname"
                   placeholder="Nom" 
-                  value={formData.lastname}
-                  onChange={handleChange}
                   required
                 />
               </div>
@@ -135,9 +122,8 @@ export const Contact2 = ({
               <Input 
                 type="email" 
                 id="email" 
+                name="email"
                 placeholder="Votre Email Professionnel" 
-                value={formData.email}
-                onChange={handleChange}
                 required
               />
             </div>
@@ -146,9 +132,8 @@ export const Contact2 = ({
               <Input 
                 type="text" 
                 id="subject" 
+                name="subject"
                 placeholder="Sujet de la Demande" 
-                value={formData.subject}
-                onChange={handleChange}
                 required
               />
             </div>
@@ -157,11 +142,14 @@ export const Contact2 = ({
               <Textarea 
                 placeholder="Décrivez votre besoin en automatisation." 
                 id="message" 
-                value={formData.message}
-                onChange={handleChange}
+                name="message"
                 required
               />
             </div>
+            {/* Hidden field to specify recipient email for Formspree */}
+            <input type="hidden" name="_replyto" value={email} />
+            <input type="hidden" name="_subject" value="Nouvelle demande de contact - BinkoO Digital Lab" />
+            
             <Button className="w-full" type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Envoi en cours..." : "Envoyer ma Demande"}
             </Button>
