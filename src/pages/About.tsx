@@ -396,7 +396,7 @@ const About: React.FC = () => {
                 <p className="text-white">
                   Notre engagement, c'est de vous accompagner sur la durée, de vous fournir des outils fiables et de toujours garder une touche humaine dans tout ce que nous faisons.
                 </p>
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-black">
                   Votre succès est notre plus belle réussite.
                 </p>
               </div>
