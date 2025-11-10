@@ -138,7 +138,10 @@ const Contact: React.FC = () => {
         </AnimatedSection>
 
         {/* Contact2 - Remplacement de la section WhatsApp */}
-        <Contact2 />
+        <Contact2 
+          title="C'est le Moment de Collaborer."
+          description="Vous avez une idée claire ? Un problème précis à résoudre ? Envoyez-nous un message direct. Notre équipe est prête à démarrer la discussion."
+        />
 
         {/* Quick Actions - Desktop/Tablet: Regular grid */}
         <div className="hidden md:grid md:grid-cols-2 gap-5 md:gap-6 mb-16 md:mb-20">

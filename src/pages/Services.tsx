@@ -227,7 +227,10 @@ const Services: React.FC = () => {
         </AnimatedSection>
       </div>
       {/* Contact2 - Juste au-dessus du Footer */}
-      <Contact2 />
+      <Contact2 
+        title="Prêt à Débloquer Votre Potentiel ?"
+        description="Chaque service proposé est une étape vers plus d'efficacité. Expliquez-nous où vous voulez exceller, et nous construirons la solution digitale."
+      />
     </div>);
 
 };
