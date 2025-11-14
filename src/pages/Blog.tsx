@@ -4,117 +4,168 @@ import { Calendar, ChevronDown, ArrowRight, Clock } from 'lucide-react';
 import { AnimatedSection, AnimatedParagraph } from '@/components/AnimatedSection';
 import { Link } from 'react-router-dom';
 
-// Mock data pour les articles
-const articles = [
+// Interface WordPress API compatible
+interface WordPressArticle {
+  id: number;
+  title: { rendered: string } | string;
+  excerpt: { rendered: string } | string;
+  content: { rendered: string } | string;
+  date: string;
+  month?: string;
+  readTime?: string;
+  image?: string;
+  _embedded?: {
+    'wp:featuredmedia'?: [{ source_url: string }];
+  };
+}
+
+// Helper: Extraire le texte brut depuis HTML WordPress
+const stripHtmlTags = (html: string): string => {
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+};
+
+// Helper: Calculer le temps de lecture depuis contenu HTML
+const calculateReadTime = (htmlContent: string): string => {
+  const text = stripHtmlTags(htmlContent);
+  const words = text.split(/\s+/).filter(w => w.length > 0).length;
+  const minutes = Math.ceil(words / 200);
+  return `${minutes} min`;
+};
+
+// Helper: Extraire le texte depuis propriété WordPress (rendered ou string)
+const extractText = (field: { rendered: string } | string | undefined): string => {
+  if (!field) return '';
+  return typeof field === 'string' ? field : field.rendered;
+};
+
+// Helper: Obtenir l'image featured WordPress ou fallback
+const getFeaturedImage = (article: WordPressArticle): string => {
+  return article._embedded?.['wp:featuredmedia']?.[0]?.source_url 
+         || article.image 
+         || '/images/fallback.jpg';
+};
+
+// Helper: Formater le mois depuis date ISO WordPress
+const getMonthFromDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+// Mock data pour les articles (compatible structure WordPress)
+const articles: WordPressArticle[] = [
   {
     id: 1,
-    title: "Comment l'IA transforme le marketing digital en 2025",
-    excerpt: "Découvrez comment l'intelligence artificielle révolutionne les stratégies marketing et booste les conversions des entreprises modernes.",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop",
+    title: { rendered: "Comment l'IA transforme le marketing digital en 2025" },
+    excerpt: { rendered: "Découvrez comment l'intelligence artificielle révolutionne les stratégies marketing et booste les conversions des entreprises modernes." },
+    content: { rendered: "Découvrez comment l'intelligence artificielle révolutionne les stratégies marketing et booste les conversions des entreprises modernes. L'IA permet de personnaliser les campagnes, d'optimiser les budgets et de prédire les comportements des clients. Cela transforme le marketing digital en une expérience plus intelligente et plus efficace." },
     date: "2025-01-15",
     month: "Janvier 2025",
     readTime: "5 min"
   },
   {
     id: 2,
-    title: "5 tendances web design à adopter cette année",
-    excerpt: "Les tendances qui domineront le design web en 2025 : minimalisme, animations fluides, et expériences immersives.",
-    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop",
+    title: { rendered: "5 tendances web design à adopter cette année" },
+    excerpt: { rendered: "Les tendances qui domineront le design web en 2025 : minimalisme, animations fluides, et expériences immersives." },
+    content: { rendered: "Les tendances qui domineront le design web en 2025 : minimalisme, animations fluides, et expériences immersives. Le design moderne se concentre sur l'expérience utilisateur, la simplicité et l'accessibilité. Ces tendances permettent de créer des interfaces qui captivent et convainquent." },
     date: "2025-01-10",
     month: "Janvier 2025",
     readTime: "4 min"
   },
   {
     id: 3,
-    title: "Automatisation : gagnez 10h par semaine",
-    excerpt: "Comment automatiser vos tâches répétitives et libérer du temps pour ce qui compte vraiment dans votre business.",
-    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=600&fit=crop",
+    title: { rendered: "Automatisation : gagnez 10h par semaine" },
+    excerpt: { rendered: "Comment automatiser vos tâches répétitives et libérer du temps pour ce qui compte vraiment dans votre business." },
+    content: { rendered: "Comment automatiser vos tâches répétitives et libérer du temps pour ce qui compte vraiment dans votre business. L'automatisation des processus répétitifs permet de gagner du temps, de réduire les erreurs humaines et de se concentrer sur les aspects stratégiques de votre entreprise." },
     date: "2025-01-05",
     month: "Janvier 2025",
     readTime: "6 min"
   },
   {
     id: 4,
-    title: "Landing page parfaite : le guide complet",
-    excerpt: "Les éléments essentiels d'une landing page qui convertit à plus de 15% : structure, copywriting et CTA.",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop",
+    title: { rendered: "Landing page parfaite : le guide complet" },
+    excerpt: { rendered: "Les éléments essentiels d'une landing page qui convertit à plus de 15% : structure, copywriting et CTA." },
+    content: { rendered: "Les éléments essentiels d'une landing page qui convertit à plus de 15% : structure, copywriting et CTA. Une bonne landing page est conçue pour captiver, convaincre et convertir. Elle doit être claire, concise et alignée avec les objectifs de conversion." },
     date: "2024-12-28",
     month: "Décembre 2024",
     readTime: "7 min"
   },
   {
     id: 5,
-    title: "Chatbots IA : le nouveau standard du service client",
-    excerpt: "Pourquoi intégrer un chatbot intelligent n'est plus une option mais une nécessité pour rester compétitif.",
-    image: "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&h=600&fit=crop",
+    title: { rendered: "Chatbots IA : le nouveau standard du service client" },
+    excerpt: { rendered: "Pourquoi intégrer un chatbot intelligent n'est plus une option mais une nécessité pour rester compétitif." },
+    content: { rendered: "Pourquoi intégrer un chatbot intelligent n'est plus une option mais une nécessité pour rester compétitif. Les chatbots IA offrent un service client 24/7, réduisent les délais de réponse et permettent de gérer une grande quantité de demandes simultanément." },
     date: "2024-12-20",
     month: "Décembre 2024",
     readTime: "5 min"
   },
   {
     id: 6,
-    title: "SEO en 2025 : ce qui a vraiment changé",
-    excerpt: "Les nouvelles règles du référencement naturel avec l'arrivée de l'IA dans les moteurs de recherche.",
-    image: "https://images.unsplash.com/photo-1432888622747-4eb9a8f2c293?w=800&h=600&fit=crop",
+    title: { rendered: "SEO en 2025 : ce qui a vraiment changé" },
+    excerpt: { rendered: "Les nouvelles règles du référencement naturel avec l'arrivée de l'IA dans les moteurs de recherche." },
+    content: { rendered: "Les nouvelles règles du référencement naturel avec l'arrivée de l'IA dans les moteurs de recherche. L'IA permet de mieux comprendre les intentions des utilisateurs, d'optimiser les contenus et de fournir des résultats plus pertinents." },
     date: "2024-12-15",
     month: "Décembre 2024",
     readTime: "8 min"
   },
   {
     id: 7,
-    title: "Branding digital : créer une identité mémorable",
-    excerpt: "Comment construire une marque forte qui se démarque dans un monde digital saturé d'informations.",
-    image: "https://images.unsplash.com/photo-1558655146-d09347e92766?w=800&h=600&fit=crop",
+    title: { rendered: "Branding digital : créer une identité mémorable" },
+    excerpt: { rendered: "Comment construire une marque forte qui se démarque dans un monde digital saturé d'informations." },
+    content: { rendered: "Comment construire une marque forte qui se démarque dans un monde digital saturé d'informations. Un bon branding digital se concentre sur la cohérence, la valeur perçue et l'expérience utilisateur unique." },
     date: "2024-12-05",
     month: "Décembre 2024",
     readTime: "6 min"
   },
   {
     id: 8,
-    title: "Performance web : chaque milliseconde compte",
-    excerpt: "L'impact de la vitesse de chargement sur vos conversions et comment optimiser votre site pour le speed.",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
+    title: { rendered: "Performance web : chaque milliseconde compte" },
+    excerpt: { rendered: "L'impact de la vitesse de chargement sur vos conversions et comment optimiser votre site pour le speed." },
+    content: { rendered: "L'impact de la vitesse de chargement sur vos conversions et comment optimiser votre site pour le speed. Une vitesse de chargement rapide améliore l'expérience utilisateur, réduit le taux de rebond et augmente les conversions." },
     date: "2024-11-25",
     month: "Novembre 2024",
     readTime: "5 min"
   },
   {
     id: 9,
-    title: "L'art du copywriting persuasif",
-    excerpt: "Techniques éprouvées pour écrire des textes qui captivent, convainquent et convertissent vos visiteurs.",
-    image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&h=600&fit=crop",
+    title: { rendered: "L'art du copywriting persuasif" },
+    excerpt: { rendered: "Techniques éprouvées pour écrire des textes qui captivent, convainquent et convertissent vos visiteurs." },
+    content: { rendered: "Techniques éprouvées pour écrire des textes qui captivent, convainquent et convertissent vos visiteurs. Le copywriting efficace utilise des techniques de persuasion, des arguments forts et une structure claire pour influencer les décisions des lecteurs." },
     date: "2024-11-18",
     month: "Novembre 2024",
     readTime: "7 min"
   },
   {
     id: 10,
-    title: "Réseaux sociaux : stratégie gagnante 2025",
-    excerpt: "Comment créer du contenu engageant et développer une communauté fidèle autour de votre marque.",
-    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&h=600&fit=crop",
+    title: { rendered: "Réseaux sociaux : stratégie gagnante 2025" },
+    excerpt: { rendered: "Comment créer du contenu engageant et développer une communauté fidèle autour de votre marque." },
+    content: { rendered: "Comment créer du contenu engageant et développer une communauté fidèle autour de votre marque. Le contenu de qualité, partagé régulièrement, crée une communauté engagée qui devient un atout stratégique pour la croissance." },
     date: "2024-11-10",
     month: "Novembre 2024",
     readTime: "6 min"
   },
   {
     id: 11,
-    title: "E-commerce : booster vos ventes en ligne",
-    excerpt: "Les stratégies essentielles pour transformer votre boutique en ligne en machine à ventes.",
-    image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?w=800&h=600&fit=crop",
+    title: { rendered: "E-commerce : booster vos ventes en ligne" },
+    excerpt: { rendered: "Les stratégies essentielles pour transformer votre boutique en ligne en machine à ventes." },
+    content: { rendered: "Les stratégies essentielles pour transformer votre boutique en ligne en machine à ventes. L'optimisation de l'expérience client, la personnalisation des recommandations et la gestion des stocks efficace sont des clés de succès." },
     date: "2024-11-02",
     month: "Novembre 2024",
     readTime: "8 min"
   }
 ];
 
-// Grouper les articles par mois
+// Grouper les articles par mois (avec support WordPress dates)
 const articlesByMonth = articles.reduce((acc, article) => {
-  if (!acc[article.month]) {
-    acc[article.month] = [];
+  const month = article.month || getMonthFromDate(article.date);
+  if (!acc[month]) {
+    acc[month] = [];
   }
-  acc[article.month].push(article);
+  acc[month].push(article);
   return acc;
-}, {} as Record<string, typeof articles>);
+}, {} as Record<string, WordPressArticle[]>);
 
 const months = Object.keys(articlesByMonth);
 
@@ -201,63 +252,70 @@ export default function Blog() {
             </motion.div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {latestArticles.map((article, index) => (
-                <motion.article
-                  key={article.id}
-                  className="group bg-white rounded-2xl overflow-hidden border border-border shadow-sm hover:shadow-xl transition-all duration-300"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                >
-                  {/* Image */}
-                  <Link to={`/blog/${article.id}`}>
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={article.image}
-                        alt={article.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        Nouveau
-                      </div>
-                    </div>
-                  </Link>
-
-                  {/* Content */}
-                  <div className="p-6">
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{formatDate(article.date)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{article.readTime}</span>
-                      </div>
-                    </div>
-
+              {latestArticles.map((article, index) => {
+                const articleTitle = extractText(article.title);
+                const articleExcerpt = stripHtmlTags(extractText(article.excerpt));
+                const articleImage = getFeaturedImage(article);
+                const articleReadTime = article.readTime || calculateReadTime(extractText(article.content));
+                
+                return (
+                  <motion.article
+                    key={article.id}
+                    className="group bg-white rounded-2xl overflow-hidden border border-border shadow-sm hover:shadow-xl transition-all duration-300"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    whileHover={{ y: -8 }}
+                  >
+                    {/* Image */}
                     <Link to={`/blog/${article.id}`}>
-                      <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
-                        {article.title}
-                      </h3>
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={articleImage}
+                          alt={articleTitle}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
+                          Nouveau
+                        </div>
+                      </div>
                     </Link>
 
-                    <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                      {article.excerpt}
-                    </p>
+                    {/* Content */}
+                    <div className="p-6">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{formatDate(article.date)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{articleReadTime}</span>
+                        </div>
+                      </div>
 
-                    <Link 
-                      to={`/blog/${article.id}`}
-                      className="inline-flex items-center text-primary font-semibold text-sm group-hover:gap-2 transition-all"
-                    >
-                      Lire l'article
-                      <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                </motion.article>
-              ))}
+                      <Link to={`/blog/${article.id}`}>
+                        <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
+                          {articleTitle}
+                        </h3>
+                      </Link>
+
+                      <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                        {articleExcerpt}
+                      </p>
+
+                      <Link 
+                        to={`/blog/${article.id}`}
+                        className="inline-flex items-center text-primary font-semibold text-sm group-hover:gap-2 transition-all"
+                      >
+                        Lire l'article
+                        <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  </motion.article>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -323,48 +381,55 @@ export default function Blog() {
                         className="border-t border-border"
                       >
                         <div className="p-6 space-y-4">
-                          {articlesByMonth[month].map((article, idx) => (
-                            <Link
-                              key={article.id}
-                              to={`/blog/${article.id}`}
-                            >
-                              <motion.div
-                                className="flex gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3, delay: idx * 0.05 }}
+                          {articlesByMonth[month].map((article, idx) => {
+                            const articleTitle = extractText(article.title);
+                            const articleExcerpt = stripHtmlTags(extractText(article.excerpt));
+                            const articleImage = getFeaturedImage(article);
+                            const articleReadTime = article.readTime || calculateReadTime(extractText(article.content));
+                            
+                            return (
+                              <Link
+                                key={article.id}
+                                to={`/blog/${article.id}`}
                               >
-                                {/* Thumbnail */}
-                                <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                                  <img
-                                    src={article.image}
-                                    alt={article.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                  />
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                                    <span>{formatDate(article.date)}</span>
-                                    <span>•</span>
-                                    <span>{article.readTime}</span>
+                                <motion.div
+                                  className="flex gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer"
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                                >
+                                  {/* Thumbnail */}
+                                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img
+                                      src={articleImage}
+                                      alt={articleTitle}
+                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                    />
                                   </div>
-                                  <h4 className="font-bold mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                                    {article.title}
-                                  </h4>
-                                  <p className="text-sm text-muted-foreground line-clamp-2">
-                                    {article.excerpt}
-                                  </p>
-                                </div>
 
-                                {/* Arrow */}
-                                <div className="flex items-center">
-                                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                                </div>
-                              </motion.div>
-                            </Link>
-                          ))}
+                                  {/* Content */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                                      <span>{formatDate(article.date)}</span>
+                                      <span>•</span>
+                                      <span>{articleReadTime}</span>
+                                    </div>
+                                    <h4 className="font-bold mb-2 group-hover:text-primary transition-colors line-clamp-1">
+                                      {articleTitle}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                      {articleExcerpt}
+                                    </p>
+                                  </div>
+
+                                  {/* Arrow */}
+                                  <div className="flex items-center">
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                  </div>
+                                </motion.div>
+                              </Link>
+                            );
+                          })}
                         </div>
                       </motion.div>
                     )}
